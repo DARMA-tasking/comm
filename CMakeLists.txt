@@ -7,7 +7,7 @@ project(comm VERSION ${_comm_version_str})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard to use")
+  set(CMAKE_CXX_STANDARD 20 CACHE STRING "The C++ standard to use")
 endif()
 
 include(cmake/load_doxygen.cmake)

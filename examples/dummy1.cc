@@ -1,10 +1,7 @@
-#include <iostream>
-#include <comm/dummy.h>
+#include <comm/comm/comm_traits.h>
+#include <comm/comm/MPI/comm_mpi.h>
 
 int main() {
-  comm::dummy::Dummy dummy;
-
-  std::cout << dummy.sum(2, 8) << '\n';
-
+  static_assert(comm::Communicator<comm::CommMPI>);
   return 0;
 }

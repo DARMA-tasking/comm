@@ -1,10 +1,7 @@
-#include <iostream>
-#include <comm/dummy.h>
+#include <comm/comm/MPI/comm_mpi.h>
+#include <fmt/core.h>
 
 int main() {
-  comm::dummy::Dummy dummy;
-
-  std::cout << dummy.sum(20, 8) << '\n';
-
+  fmt::print("comm MPI backend is available\n");
   return 0;
 }

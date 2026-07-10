@@ -16,6 +16,9 @@ cmake --build build
 # Testing
 ./build/tests/comm_tests
 
+## Optional multi-rank test run
+mpirun -np 2 ./build/tests/comm_tests
+
 # Examples
 ./build/examples/[filename]
 # example: ./build/examples/dummy1
