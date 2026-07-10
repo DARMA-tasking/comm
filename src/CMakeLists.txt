@@ -1,0 +1,9 @@
+set(COMM_LIBRARY comm)
+
+file(GLOB HEADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/comm/*.h)
+file(GLOB SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/comm/*.cc)
+
+add_library(
+  ${COMM_LIBRARY}
+  ${HEADER_FILES} ${SOURCE_FILES}
+)
