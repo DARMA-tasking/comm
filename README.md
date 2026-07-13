@@ -28,16 +28,18 @@ cmake -S . -B build
 
 # Compiling
 cmake --build build
+cmake --build build --parallel # Faster
 
 # Testing
 ./build/tests/comm_tests
+ctest --test-dir build --output-on-failure
 
 ## Optional multi-rank test run
 mpirun -np 2 ./build/tests/comm_tests
 
 # Examples
 ./build/examples/[filename]
-# example: ./build/examples/dummy1
+# Example: ./build/examples/dummy1
 
 # Documentation
 xdg-open build/html/index.html # Linux

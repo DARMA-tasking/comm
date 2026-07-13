@@ -30,4 +30,5 @@ set(COMM_EXAMPLES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 add_subdirectory(examples)
 
 set(COMM_TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+enable_testing()
 add_subdirectory(tests)
