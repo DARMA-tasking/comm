@@ -4,8 +4,24 @@
 
 * See [.github/workflows/README](.github/workflows/README.md)
 
+## Get code
+
+```bash
+git clone git@github.com:DARMA-tasking/comm.git
+```
+
+## Required
+
+- MPI, installed and accessible via CC/CXX
+- `magistrate`, (`vt` ecosystem), cloned like:
+```bash
+cd comm/lib
+git clone git@github.com:DARMA-tasking/magistrate.git
+```
+
 ## Usage
 
+In `comm/`:
 ```bash
 # Building
 cmake -S . -B build

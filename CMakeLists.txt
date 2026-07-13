@@ -17,6 +17,10 @@ include(cmake/load_doxygen.cmake)
 set(FMT_LIBRARY fmt)
 add_subdirectory(lib/fmt)
 
+set(kokkos_DISABLE ON CACHE BOOL "" FORCE)
+set(kokkos_kernels_DISABLE ON CACHE BOOL "" FORCE)
+add_subdirectory(lib/magistrate)
+
 # Project components
 
 set(COMM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
