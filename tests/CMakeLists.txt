@@ -13,14 +13,20 @@ endif()
 
 set(COMM_TESTS comm_tests)
 
-file(GLOB TEST_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
+file(GLOB_RECURSE TEST_SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
 
 add_executable(${COMM_TESTS} ${TEST_SOURCE_FILES})
 
 target_link_libraries(${COMM_TESTS}
   PRIVATE
     comm
-    GTest::gtest_main
+    GTest::gtest
+    fmt::fmt
 )
 
-target_include_directories(${COMM_TESTS} PRIVATE ${COMM_SOURCE_DIR})
+target_include_directories(${COMM_TESTS}
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_test(NAME ${COMM_TESTS} COMMAND ${COMM_TESTS})
