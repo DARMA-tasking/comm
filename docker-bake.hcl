@@ -19,22 +19,6 @@ function "target_suffix" {
   result = variant(item) == "" ? "" : "-${variant(item)}"
 }
 
-target "comm-build" {
-  target = "build"
-  context = "."
-  dockerfile = "ci/docker/comm.dockerfile"
-
-  platforms = [
-    "linux/amd64",
-    # "linux/arm64"
-  ]
-  ulimits = [
-    "core=0"
-  ]
-
-  secret = ["id=GITHUB_TOKEN,env=GITHUB_TOKEN"]
-}
-
 target "comm-build-all" {
   name = "comm-build-${replace(item.image, ".", "-")}${target_suffix(item)}"
   inherits = ["comm-build"]
