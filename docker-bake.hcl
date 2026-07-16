@@ -31,8 +31,6 @@ target "comm-build" {
   ulimits = [
     "core=0"
   ]
-
-  secret = ["id=GITHUB_TOKEN,env=GITHUB_TOKEN"]
 }
 
 target "comm-build-all" {
