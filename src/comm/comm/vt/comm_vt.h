@@ -89,7 +89,7 @@ private:
 
 } /* end namespace comm */
 
-#include "comm/comm/vt/comm_vt.impl.h
+#include "comm/comm/vt/comm_vt.impl.h"
 
 #endif /*vt_backend_enabled*/
 
