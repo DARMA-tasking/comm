@@ -17,6 +17,7 @@ endif()
 # Bundled fmt: kept as an embedded build (its vendored CMakeLists has the
 # install path stripped). comm folds the fmt target into its own export set
 # (see src/CMakeLists.txt) so downstream consumers get it transitively.
+set(FMT_MODULE OFF CACHE BOOL "Build fmt C++20 module library" FORCE)
 set(FMT_LIBRARY fmt)
 add_subdirectory(lib/fmt)
 
