@@ -54,25 +54,6 @@ target "comm-build-all" {
       {
         image = "amd64-alpine-3.16-clang-cpp"
       },
-
-      # Notes: Ubuntu 20.04 images use GCC 9/Clang 9–10 or CUDA 11.4 toolchains
-      # that cannot compile this project’s required C++20 concepts API.
-
-      # image = "amd64-ubuntu-20.04-clang-10-cpp"
-      # image = "amd64-ubuntu-20.04-clang-9-cpp"
-      # image = "amd64-ubuntu-20.04-gcc-10-cpp"
-      # image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
-      # image = "amd64-ubuntu-20.04-gcc-13-cuda-12.9.0-cpp"
-      # image = "amd64-ubuntu-20.04-gcc-9-cpp"
-      # image = "amd64-ubuntu-20.04-gcc-9-cuda-11.4.3-cpp"
-      # image = "amd64-ubuntu-20.04-gcc-9-cuda-12.2.0-cpp"
-      # image = "amd64-ubuntu-20.04-gcc-9-ldms-cpp"
-      # image = "amd64-ubuntu-20.04-icpx-cpp"
-
-      # Notes: Internal compiler error
-
-      # image = "amd64-ubuntu-22.04-clang-11-cpp"
-
       {
         image = "amd64-ubuntu-22.04-clang-12-cpp"
       },
