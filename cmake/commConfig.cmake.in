@@ -1,0 +1,10 @@
+include(CMakeFindDependencyMacro)
+
+find_dependency(MPI REQUIRED)
+find_dependency(checkpoint REQUIRED CONFIG)
+
+if(@COMM_HAS_VT@)
+  find_dependency(vt REQUIRED CONFIG)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/commTargets.cmake")

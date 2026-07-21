@@ -9,10 +9,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20 CACHE STRING "The C++ standard to use")
 endif()
+message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
-include(cmake/load_doxygen.cmake)
+# include(cmake/load_doxygen.cmake)
 
 # External libraries
+
+## Neither comm nor its bundled dependencies use C++ modules.
+set(
+  CMAKE_CXX_SCAN_FOR_MODULES OFF
+  CACHE BOOL "Scan C++ sources for module dependencies"
+  FORCE
+)
+
+set(FMT_MODULE OFF CACHE BOOL "Build fmt C++20 module library" FORCE)
 
 # Bundled fmt: kept as an embedded build (its vendored CMakeLists has the
 # install path stripped). comm folds the fmt target into its own export set

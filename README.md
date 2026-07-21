@@ -13,6 +13,7 @@ git clone git@github.com:DARMA-tasking/comm.git
 ## Required
 
 - MPI, installed and accessible via CC/CXX
+- Ninja, installed and accessible
 - `magistrate`, (`vt` ecosystem), cloned like:
 ```bash
 cd comm/lib
@@ -20,6 +21,19 @@ git clone git@github.com:DARMA-tasking/magistrate.git
 ```
 
 ## Usage
+
+### With scripts
+
+In `comm/`:
+```bash
+# Building
+./ci/build_cpp.sh "$PWD" "$PWD/build/ci"
+
+# Testing
+./ci/test_cpp.sh "$PWD" "$PWD/build/ci"
+```
+
+### With cmake
 
 In `comm/`:
 ```bash
