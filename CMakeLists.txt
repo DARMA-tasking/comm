@@ -11,7 +11,17 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
-# include(cmake/load_doxygen.cmake)
+# Documentation
+
+option(
+  COMM_DOXYGEN_ENABLED
+  "Build doxygen documentation for comm"
+  OFF
+)
+
+if(COMM_DOXYGEN_ENABLED)
+  include(cmake/load_doxygen.cmake)
+endif()
 
 # External libraries
 

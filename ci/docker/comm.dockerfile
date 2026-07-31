@@ -8,10 +8,16 @@ FROM --platform=${ARCH} ${BASE} AS build
 
 ARG IMAGE
 ARG CACHE_ID=${IMAGE}
+ARG GIT_BRANCH
+ARG COMM_DOXYGEN_ENABLED=0
 
 RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache             \
     --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/comm         \
     --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN               \
     --mount=target=/comm,rw                                            \
-        /comm/ci/build_cpp.sh /comm /build &&                          \
-        /comm/ci/test_cpp.sh /comm /build
+        if [ "${LOC_DOXYGEN_ENABLED}" = "1" ]; then                    \
+            /comm/ci/build_cpp.sh /comm /build;                        \
+        else                                                           \
+            /comm/ci/build_cpp.sh /comm /build &&                      \
+            /comm/ci/test_cpp.sh /comm /build                          \
+        fi

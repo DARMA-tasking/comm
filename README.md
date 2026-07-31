@@ -4,6 +4,12 @@
 
 * See [.github/workflows/README](.github/workflows/README.md)
 
+## Read the documentation
+
+To learn *comm*, read the
+[full documentation](https://darma-tasking.github.io/comm_docs/html/index.html)
+that is automatically generated whenever a push occurs to "master".
+
 ## Get code
 
 ```bash
@@ -43,6 +49,9 @@ cmake -S . -B build
 # Compiling
 cmake --build build
 cmake --build build --parallel # Faster
+
+# Installing
+cmake --install build --prefix "$PWD/install"
 
 # Testing
 ./build/tests/comm_tests
