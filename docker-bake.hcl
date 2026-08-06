@@ -76,11 +76,6 @@ target "comm-build-all" {
         image = "amd64-ubuntu-22.04-gcc-11-cpp"
       },
       {
-        image = "amd64-ubuntu-22.04-gcc-11-cpp"
-        comm_docs = 1
-        variant = "docs"
-      },
-      {
         image = "amd64-ubuntu-22.04-gcc-12-cpp"
       },
       {
@@ -109,7 +104,12 @@ target "comm-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
-      }
+      },
+      {
+        image = "amd64-ubuntu-24.04-gcc-14-cpp"
+        comm_docs = 1
+        variant = "docs"
+      },
     ]
   }
 }
