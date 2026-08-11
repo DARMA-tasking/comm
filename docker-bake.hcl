@@ -9,6 +9,11 @@ function "arch" {
   result = lookup(item, "arch", "amd64")
 }
 
+function "comm_docs" {
+  params = [item]
+  result = lookup(item, "comm_docs", "0")
+}
+
 function "variant" {
   params = [item]
   result = lookup(item, "variant", "")
@@ -45,6 +50,7 @@ target "comm-build-all" {
     GIT_BRANCH = "${GIT_BRANCH}"
     IMAGE = "wf-${item.image}"
     REPO = REPO
+    COMM_DOXYGEN_ENABLED = comm_docs(item)
   }
 
   # to get the list of available images from DARMA-tasking/workflows:
@@ -98,7 +104,12 @@ target "comm-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
-      }
+      },
+      {
+        image = "amd64-ubuntu-24.04-gcc-14-cpp"
+        comm_docs = 1
+        variant = "docs"
+      },
     ]
   }
 }
