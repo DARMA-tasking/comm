@@ -74,7 +74,7 @@ then
     git -C "${MCSS}" checkout 699abdd5
     "$MCSS/documentation/doxygen.py" "${comm_build}/Doxyfile-mcss"
 
-    if test "${GIT_BRANCH:-}" = "7-build-doc"
+    if test "${GIT_BRANCH:-}" = "master"
     then
         CKPT_NAME=comm_docs
 
