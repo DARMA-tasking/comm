@@ -229,7 +229,7 @@ public:
 
     // Validate destination rank
     if (dest < 0 || dest >= numRanks()) {
-      COMM_LOG(Communicator, terse, "Invalid destination rank {}\n", dest);
+      COMM_LOG(::comm::util::communicatorComponent(), terse, "Invalid destination rank {}\n", dest);
       throw std::runtime_error("Invalid destination rank");
     }
 
@@ -253,7 +253,7 @@ public:
     buf_interpreter.isTermination() = is_termination_msg ? 1 : 0;
 
     COMM_LOG(
-      Communicator, normal,
+      ::comm::util::communicatorComponent(), normal,
       "MPI_Isend to {} handler_index={} class_index={} is_termination={}\n",
       dest,
       buf_interpreter.handlerIndex(),
@@ -317,7 +317,7 @@ public:
     std::vector<T> recvbuf;
     recvbuf.resize(static_cast<std::size_t>(total));
 
-    COMM_LOG(Communicator, normal, "MPI_Iallgatherv sendcount={} total={} ranks={}\n", sendcount, total, n);
+    COMM_LOG(::comm::util::communicatorComponent(), normal, "MPI_Iallgatherv sendcount={} total={} ranks={}\n", sendcount, total, n);
 
     MPI_Request req;
     MPI_Iallgatherv(

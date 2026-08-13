@@ -45,6 +45,9 @@
 #define INCLUDED_COMM_UTIL_LOGGING_H
 
 #include <fmt/format.h>
+#include <memory>
+#include <optional>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <cstdio>
@@ -57,13 +60,56 @@ enum class Verbosity : int {
   verbose = 2
 };
 
-enum class Component : int {
-  Communicator = 0,
-  LoadBalancer = 1,
-  Clusterer = 2,
-  Visualizer = 3,
-  Termination = 4
+namespace detail {
+struct ComponentState;
+}
+
+/**
+ * Component handles are created by registerComponent(). A default-constructed
+ * handle is invalid and never produces output.
+ */
+class Component {
+public:
+  Component() = default;
+
+  explicit operator bool() const noexcept { return state_ != nullptr; }
+
+  friend bool operator==(Component const&, Component const&) = default;
+
+private:
+  explicit Component(std::shared_ptr<detail::ComponentState> state)
+    : state_(std::move(state))
+  { }
+
+  std::shared_ptr<detail::ComponentState> state_;
+
+  friend Component registerComponent(std::string, bool);
+  friend std::optional<Component> findComponent(std::string_view);
+  friend void enable(Component const&);
+  friend void disable(Component const&);
+  friend bool isEnabled(Component const&);
+  friend std::string_view componentName(Component const&);
+  friend std::string_view componentColorName(Component const&);
 };
+
+/**
+ * Register a component name and return its stable handle.
+ *
+ * Registration is thread-safe and idempotent: registering the same name again
+ * returns the original handle, and the first registration determines its
+ * initial enabled state. Empty names are rejected with std::invalid_argument.
+ */
+Component registerComponent(std::string name, bool initially_enabled = false);
+
+/** Find a previously registered component without implicitly creating it. */
+std::optional<Component> findComponent(std::string_view name);
+
+// Built-in components use the same registry as components added by users.
+Component const& communicatorComponent();
+Component const& loadBalancerComponent();
+Component const& clustererComponent();
+Component const& visualizerComponent();
+Component const& terminationComponent();
 
 void setVerbosity(Verbosity v);
 Verbosity getVerbosity();
@@ -71,17 +117,23 @@ Verbosity getVerbosity();
 void enableAll();
 void disableAll();
 
-void enable(Component c);
-void disable(Component c);
-bool isEnabled(Component c);
+void enable(Component const& c);
+void disable(Component const& c);
+bool isEnabled(Component const& c);
+
+/** Enable or disable a component by registered name. Returns false if unknown. */
+bool enable(std::string_view name);
+bool disable(std::string_view name);
+bool isEnabled(std::string_view name);
 
 // Rank provider API
 using RankProvider = int(*)();
 void setRankProvider(RankProvider rp);
 void clearRankProvider();
+RankProvider getRankProvider();
 
 // Helpers to print names
-std::string_view componentName(Component c);
+std::string_view componentName(Component const& c);
 std::string_view verbosityName(Verbosity v);
 
 // Color toggle
@@ -89,25 +141,22 @@ void setColorEnabled(bool enabled);
 bool getColorEnabled();
 
 // Colored helpers
-std::string_view componentColorName(Component c);
+std::string_view componentColorName(Component const& c);
 std::string_view verbosityColorName(Verbosity v);
 std::string prefixColor();
-
-// rank provider symbol is defined in logging.cc
-extern RankProvider __comm_util_rank_provider;
 
 /**
  * Log a message formatted via fmt when the component is enabled and the current
  * verbosity is >= msg_verbosity. Prefix includes component, verbosity, and rank (if available).
  */
 template <typename... Args>
-inline void log(Component comp, Verbosity msg_verbosity, std::string_view fmt_str, Args&&... args) {
+inline void log(Component const& comp, Verbosity msg_verbosity, std::string_view fmt_str, Args&&... args) {
   if (isEnabled(comp) && static_cast<int>(getVerbosity()) >= static_cast<int>(msg_verbosity)) {
     auto const comp_str = getColorEnabled() ? componentColorName(comp) : componentName(comp);
     auto const verb_str = getColorEnabled() ? verbosityColorName(msg_verbosity) : verbosityName(msg_verbosity);
-    auto const prefix = getColorEnabled() ? prefixColor() :  "LB:";
-    if (__comm_util_rank_provider) {
-      auto const r = __comm_util_rank_provider();
+    auto const prefix = getColorEnabled() ? prefixColor() :  "COMM:";
+    if (auto const rank_provider = getRankProvider()) {
+      auto const r = rank_provider();
       fmt::print("{} [{}] ({}) {}: ", prefix, r, verb_str, comp_str);
     } else {
       fmt::print("{} ({}) {}: ", prefix, verb_str, comp_str);
@@ -116,10 +165,18 @@ inline void log(Component comp, Verbosity msg_verbosity, std::string_view fmt_st
     fflush(stdout);
   }
 }
+
+/** Log through a registered name. Unknown names intentionally produce no output. */
+template <typename... Args>
+inline void log(std::string_view component_name, Verbosity msg_verbosity, std::string_view fmt_str, Args&&... args) {
+  if (auto const component = findComponent(component_name)) {
+    log(*component, msg_verbosity, fmt_str, std::forward<Args>(args)...);
+  }
+}
 } /* end namespace comm::util */
 
-// Unified logging macro: specify component first, then verbosity mode
+// Log with either a Component handle/expression or a registered string name.
 #define COMM_LOG(component, mode, ...) \
-  ::comm::util::log(::comm::util::Component::component, ::comm::util::Verbosity::mode, __VA_ARGS__)
+  ::comm::util::log((component), ::comm::util::Verbosity::mode, __VA_ARGS__)
 
 #endif /*INCLUDED_COMM_UTIL_LOGGING_H*/
