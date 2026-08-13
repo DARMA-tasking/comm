@@ -78,8 +78,8 @@ struct ComponentState {
 namespace {
 
 std::string colorizeComponent(std::string const& name) {
-  // FNV-1a makes a component's color deterministic and independent of the
-  // order in which components happen to register.
+  // FNV-1a (Fowler–Noll–Vo) makes a component's color deterministic and
+  // independent of the order in which components happen to register.
   std::uint32_t hash = 2166136261u;
   for (auto const character : name) {
     hash ^= static_cast<unsigned char>(character);
