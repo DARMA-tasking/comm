@@ -95,9 +95,9 @@ private:
 /**
  * Register a component name and return its stable handle.
  *
- * Registration is thread-safe and idempotent: registering the same name again
- * returns the original handle, and the first registration determines its
- * initial enabled state. Empty names are rejected with std::invalid_argument.
+ * Registration is idempotent: registering the same name again returns the
+ * original handle, and the first registration determines its initial enabled
+ * state. Empty names are rejected with std::invalid_argument.
  */
 Component registerComponent(std::string name, bool initially_enabled = false);
 

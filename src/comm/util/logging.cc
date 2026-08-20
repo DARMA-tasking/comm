@@ -42,9 +42,7 @@
 */
 #include <comm/util/logging.h>
 #include <array>
-#include <atomic>
 #include <cstdint>
-#include <mutex>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -70,7 +68,7 @@ struct ComponentState {
 
   std::string const name;
   std::string const color_name;
-  std::atomic<bool> enabled;
+  bool enabled;
 };
 
 } // namespace detail
@@ -101,7 +99,6 @@ public:
       throw std::invalid_argument("logging component name must not be empty");
     }
 
-    std::lock_guard lock(mutex_);
     if (auto const iter = components_by_name_.find(name); iter != components_by_name_.end()) {
       return iter->second;
     }
@@ -110,15 +107,13 @@ public:
   }
 
   std::shared_ptr<detail::ComponentState> find(std::string_view name) const {
-    std::lock_guard lock(mutex_);
     auto const iter = components_by_name_.find(std::string{name});
     return iter == components_by_name_.end() ? nullptr : iter->second;
   }
 
   void setAll(bool enabled) {
-    std::lock_guard lock(mutex_);
     for (auto const& component : components_) {
-      component->enabled.store(enabled, std::memory_order_relaxed);
+      component->enabled = enabled;
     }
   }
 
@@ -148,14 +143,13 @@ private:
     return component;
   }
 
-  mutable std::mutex mutex_;
   std::unordered_map<std::string, std::shared_ptr<detail::ComponentState>> components_by_name_;
   std::vector<std::shared_ptr<detail::ComponentState>> components_;
 };
 
-std::atomic<Verbosity> g_verbosity{Verbosity::normal};
-std::atomic<RankProvider> g_rank_provider{nullptr};
-std::atomic<bool> g_color_enabled{true};
+Verbosity g_verbosity = Verbosity::normal;
+RankProvider g_rank_provider = nullptr;
+bool g_color_enabled = true;
 
 } // anonymous namespace
 
@@ -202,11 +196,11 @@ Component const& terminationComponent() {
 // << End of convenience for built-in components.
 
 void setVerbosity(Verbosity v) {
-  g_verbosity.store(v, std::memory_order_relaxed);
+  g_verbosity = v;
 }
 
 Verbosity getVerbosity() {
-  return g_verbosity.load(std::memory_order_relaxed);
+  return g_verbosity;
 }
 
 void enableAll() {
@@ -219,18 +213,18 @@ void disableAll() {
 
 void enable(Component const& c) {
   if (c.state_) {
-    c.state_->enabled.store(true, std::memory_order_relaxed);
+    c.state_->enabled = true;
   }
 }
 
 void disable(Component const& c) {
   if (c.state_) {
-    c.state_->enabled.store(false, std::memory_order_relaxed);
+    c.state_->enabled = false;
   }
 }
 
 bool isEnabled(Component const& c) {
-  return c.state_ && c.state_->enabled.load(std::memory_order_relaxed);
+  return c.state_ && c.state_->enabled;
 }
 
 bool enable(std::string_view name) {
@@ -257,23 +251,23 @@ bool isEnabled(std::string_view name) {
 }
 
 void setRankProvider(RankProvider rp) {
-  g_rank_provider.store(rp, std::memory_order_relaxed);
+  g_rank_provider = rp;
 }
 
 void clearRankProvider() {
-  g_rank_provider.store(nullptr, std::memory_order_relaxed);
+  g_rank_provider = nullptr;
 }
 
 RankProvider getRankProvider() {
-  return g_rank_provider.load(std::memory_order_relaxed);
+  return g_rank_provider;
 }
 
 void setColorEnabled(bool enabled) {
-  g_color_enabled.store(enabled, std::memory_order_relaxed);
+  g_color_enabled = enabled;
 }
 
 bool getColorEnabled() {
-  return g_color_enabled.load(std::memory_order_relaxed);
+  return g_color_enabled;
 }
 
 std::string_view componentName(Component const& c) {
