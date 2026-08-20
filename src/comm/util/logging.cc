@@ -90,6 +90,27 @@ std::string colorizeComponent(std::string const& name) {
   return std::string(colors[hash % colors.size()]) + name + std::string(RESET);
 }
 
+enum class BuiltinComponent : std::size_t {
+  communicator,
+  load_balancer,
+  clusterer,
+  visualizer,
+  termination
+};
+
+struct BuiltinComponentSpec {
+  std::string_view name;
+  bool initially_enabled;
+};
+
+static constexpr std::array<BuiltinComponentSpec, 5> builtin_components = {{
+  {"Communicator", false},
+  {"LoadBalancer", true},
+  {"Clusterer", true},
+  {"Visualizer", true},
+  {"Termination", false}
+}};
+
 class ComponentRegistry {
 public:
   std::shared_ptr<detail::ComponentState> registerComponent(
@@ -124,11 +145,9 @@ public:
 
 private:
   ComponentRegistry() {
-    addComponent("Communicator", false);
-    addComponent("LoadBalancer", true);
-    addComponent("Clusterer", true);
-    addComponent("Visualizer", true);
-    addComponent("Termination", false);
+    for (auto const& component : builtin_components) {
+      addComponent(std::string{component.name}, component.initially_enabled);
+    }
   }
 
   std::shared_ptr<detail::ComponentState> addComponent(
@@ -151,6 +170,15 @@ Verbosity g_verbosity = Verbosity::normal;
 RankProvider g_rank_provider = nullptr;
 bool g_color_enabled = true;
 
+template <BuiltinComponent builtin>
+Component const& builtinComponent() {
+  static constexpr auto spec = builtin_components[static_cast<std::size_t>(builtin)];
+  static Component const component = registerComponent(
+    std::string{spec.name}, spec.initially_enabled
+  );
+  return component;
+}
+
 } // anonymous namespace
 
 Component registerComponent(std::string name, bool initially_enabled) {
@@ -169,28 +197,23 @@ std::optional<Component> findComponent(std::string_view name) {
 // Convenience for built-in components:
 
 Component const& communicatorComponent() {
-  static Component const component = registerComponent("Communicator", false);
-  return component;
+  return builtinComponent<BuiltinComponent::communicator>();
 }
 
 Component const& loadBalancerComponent() {
-  static Component const component = registerComponent("LoadBalancer", true);
-  return component;
+  return builtinComponent<BuiltinComponent::load_balancer>();
 }
 
 Component const& clustererComponent() {
-  static Component const component = registerComponent("Clusterer", true);
-  return component;
+  return builtinComponent<BuiltinComponent::clusterer>();
 }
 
 Component const& visualizerComponent() {
-  static Component const component = registerComponent("Visualizer", true);
-  return component;
+  return builtinComponent<BuiltinComponent::visualizer>();
 }
 
 Component const& terminationComponent() {
-  static Component const component = registerComponent("Termination", false);
-  return component;
+  return builtinComponent<BuiltinComponent::termination>();
 }
 
 // << End of convenience for built-in components.
