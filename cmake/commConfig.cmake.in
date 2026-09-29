@@ -3,6 +3,10 @@ include(CMakeFindDependencyMacro)
 find_dependency(MPI REQUIRED)
 find_dependency(checkpoint REQUIRED CONFIG)
 
+if(@COMM_USES_PARENT_FMT@)
+  find_dependency(fmt REQUIRED CONFIG)
+endif()
+
 if(@COMM_HAS_VT@)
   find_dependency(vt REQUIRED CONFIG)
 endif()
