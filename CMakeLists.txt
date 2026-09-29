@@ -34,11 +34,14 @@ set(
 
 set(FMT_MODULE OFF CACHE BOOL "Build fmt C++20 module library" FORCE)
 
-# Bundled fmt: kept as an embedded build (its vendored CMakeLists has the
-# install path stripped). comm folds the fmt target into its own export set
-# (see src/CMakeLists.txt) so downstream consumers get it transitively.
-set(FMT_LIBRARY fmt)
-add_subdirectory(lib/fmt)
+# Bundled fmt
+include(cmake/setup_fmt.cmake)
+darma_setup_fmt(
+  SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/lib/fmt"
+  VENDORED_TARGET fmt
+  OUT_LIBRARY     FMT_LIBRARY
+  OUT_LINK_TARGET FMT_LINK_TARGET
+)
 
 # Bundled magistrate ships its own checkpoint/magistrate package configs
 # (magistrate_enable_export_of_targets defaults ON), which define the
@@ -60,6 +63,12 @@ enable_testing()
 add_subdirectory(tests)
 
 # Package config so downstream projects can `find_package(comm CONFIG)`
+if(FMT_LIBRARY)
+  set(COMM_USES_PARENT_FMT 0)
+else()
+  set(COMM_USES_PARENT_FMT 1)
+endif()
+
 if(vt_backend_enabled)
   set(COMM_HAS_VT 1)
 else()
