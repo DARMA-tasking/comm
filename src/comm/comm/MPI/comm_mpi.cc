@@ -78,7 +78,17 @@ CommMPI CommMPI::clone(bool dup_comm) const {
   } else {
     new_comm = comm_;
   }
-  return CommMPI{new_comm, cached_rank_, cached_size_};
+  return CommMPI{new_comm, cached_rank_, cached_size_, dup_comm};
+}
+
+CommMPI::~CommMPI() {
+  if (owns_comm_ && comm_ != MPI_COMM_NULL) {
+    int finalized = 0;
+    MPI_Finalized(&finalized);
+    if (!finalized) {
+      MPI_Comm_free(&comm_);
+    }
+  }
 }
 
 void CommMPI::finalize() {
