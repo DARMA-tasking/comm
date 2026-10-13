@@ -55,6 +55,7 @@ cmake_command=(
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-OFF}"
     -Dvt_backend_enabled="${VT_BACKEND_ENABLED:-OFF}"
+    -DCOMM_DOXYGEN_ENABLED="${COMM_DOXYGEN_ENABLED:-0}"
 )
 
 if command -v ccache >/dev/null 2>&1; then
@@ -63,9 +64,35 @@ fi
 
 "${cmake_command[@]}" 2>&1 | tee "${comm_build}/cmake-configure.log"
 
-build_command=(cmake --build "${comm_build}")
+if test "${COMM_DOXYGEN_ENABLED:-0}" -eq 1
+then
+    MCSS=${comm_build}/m.css
+    GHPAGE=${comm_build}/DARMA-tasking.github.io
 
-"${build_command[@]}" 2>&1 | tee "${comm_build}/compilation-output.log"
+    git clone --depth=1 "https://x-access-token:${GITHUB_TOKEN}@github.com/DARMA-tasking/DARMA-tasking.github.io" "${GHPAGE}"
+    git clone https://github.com/mosra/m.css "${MCSS}"
+    git -C "${MCSS}" checkout 699abdd5
+    "$MCSS/documentation/doxygen.py" "${comm_build}/Doxyfile-mcss"
+
+    if test "${GIT_BRANCH:-}" = "master"
+    then
+        CKPT_NAME=comm_docs
+
+        git -C "${GHPAGE}" rm -r --ignore-unmatch "${CKPT_NAME}"
+        mv "${comm_build}/docs" "${GHPAGE}/${CKPT_NAME}"
+
+        cd "$GHPAGE"
+        git config --global user.email "jliffla@sandia.gov"
+        git config --global user.name "Jonathan Lifflander"
+        git add "$CKPT_NAME"
+        git commit --allow-empty -m "Update comm_docs (auto-build)"
+        git push origin master
+    fi
+else
+    echo "=== compiling comm ===" >&2
+    build_command=(cmake --build "${comm_build}")
+    "${build_command[@]}" 2>&1 | tee "${comm_build}/compilation-output.log"
+fi
 
 if command -v ccache >/dev/null 2>&1; then
     echo "=== ccache statistics after build ===" >&2

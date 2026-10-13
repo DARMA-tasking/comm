@@ -66,7 +66,7 @@ void TerminationDetector::startFirstWave() {
 }
 
 void TerminationDetector::sendControlToChildren() {
-  COMM_LOG(Termination, verbose, "sending control to {} children\n", num_children_);
+  COMM_LOG(::comm::util::terminationComponent(), verbose, "sending control to {} children\n", num_children_);
 
   for (int i = 0; i < num_children_; i++) {
     handle_[first_child_ + i].sendTerm<&TerminationDetector::onControl>();
@@ -80,14 +80,14 @@ void TerminationDetector::sendControlToChildren() {
 
 void TerminationDetector::sendResponseToParent(uint64_t in_sent, uint64_t in_recv) {
   COMM_LOG(
-    Termination, verbose, "sending response to parent {}: sent={}, recv={}\n",
+    ::comm::util::terminationComponent(), verbose, "sending response to parent {}: sent={}, recv={}\n",
     parent_, in_sent, in_recv
   );
   handle_[parent_].sendTerm<&TerminationDetector::onResponse>(in_sent, in_recv);
 }
 
 void TerminationDetector::onControl() {
-  COMM_LOG(Termination, verbose, "received control message, num_children_={}\n", num_children_);
+  COMM_LOG(::comm::util::terminationComponent(), verbose, "received control message, num_children_={}\n", num_children_);
   waiting_children_ = num_children_;
   // Forward control to children
   if (num_children_ > 0) {
@@ -100,7 +100,7 @@ void TerminationDetector::onControl() {
 
 void TerminationDetector::onResponse(uint64_t in_sent, uint64_t in_recv) {
   COMM_LOG(
-    Termination,
+    ::comm::util::terminationComponent(),
     verbose,
     "received response: sent={}, recv={}, global_sent1={}, global_recv1={} waiting_children={}\n",
     in_sent, in_recv, global_sent1_, global_recv1_, waiting_children_
@@ -118,7 +118,7 @@ void TerminationDetector::checkAllChildrenComplete() {
   if (waiting_children_ == 0) {
 
     COMM_LOG(
-      Termination,
+      ::comm::util::terminationComponent(),
       verbose, "aggregated total: sent={}, recv={}\n",
       global_sent1_, global_recv1_
     );
@@ -130,7 +130,7 @@ void TerminationDetector::checkAllChildrenComplete() {
       global_recv1_ += recv_;
 
       COMM_LOG(
-        Termination,
+        ::comm::util::terminationComponent(),
         verbose, "Root total: s1={}, r1={}, s2={}, r2={}\n",
         global_sent1_, global_recv1_, global_sent2_, global_recv2_
       );
@@ -164,19 +164,19 @@ void TerminationDetector::checkAllChildrenComplete() {
 void TerminationDetector::notifyMessageSend() {
   if (!terminated_) {
     sent_++;
-  COMM_LOG(Termination, verbose, "notified send, counter: sent_={}, recv_={}\n", sent_, recv_);
+  COMM_LOG(::comm::util::terminationComponent(), verbose, "notified send, counter: sent_={}, recv_={}\n", sent_, recv_);
   }
 }
 
 void TerminationDetector::notifyMessageReceive() {
   if (!terminated_) {
     recv_++;
-  COMM_LOG(Termination, verbose, "notified receive, counter: sent_={}, recv_={}\n", sent_, recv_);
+  COMM_LOG(::comm::util::terminationComponent(), verbose, "notified receive, counter: sent_={}, recv_={}\n", sent_, recv_);
   }
 }
 
 void TerminationDetector::terminated() {
-  COMM_LOG(Termination, terse, "{} Terminated!\n", static_cast<void*>(this));
+  COMM_LOG(::comm::util::terminationComponent(), terse, "{} Terminated!\n", static_cast<void*>(this));
   terminated_ = true;
   for (int i = 0; i < num_children_; i++) {
     handle_[first_child_ + i].sendTerm<&TerminationDetector::terminated>();

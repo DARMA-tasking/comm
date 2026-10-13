@@ -87,10 +87,11 @@ struct CommMPI {
   CommMPI(CommMPI&&) = delete;
   CommMPI& operator=(CommMPI const&) = delete;
   CommMPI& operator=(CommMPI&&) = delete;
+  ~CommMPI();
 
 private:
-  CommMPI(MPI_Comm comm, int rank, int size)
-    : comm_(comm), cached_rank_(rank), cached_size_(size)
+  CommMPI(MPI_Comm comm, int rank, int size, bool owns_comm)
+    : comm_(comm), owns_comm_(owns_comm), cached_rank_(rank), cached_size_(size)
   {
     initTermination();
   }
@@ -229,7 +230,7 @@ public:
 
     // Validate destination rank
     if (dest < 0 || dest >= numRanks()) {
-      COMM_LOG(Communicator, terse, "Invalid destination rank {}\n", dest);
+      COMM_LOG(::comm::util::communicatorComponent(), terse, "Invalid destination rank {}\n", dest);
       throw std::runtime_error("Invalid destination rank");
     }
 
@@ -253,7 +254,7 @@ public:
     buf_interpreter.isTermination() = is_termination_msg ? 1 : 0;
 
     COMM_LOG(
-      Communicator, normal,
+      ::comm::util::communicatorComponent(), normal,
       "MPI_Isend to {} handler_index={} class_index={} is_termination={}\n",
       dest,
       buf_interpreter.handlerIndex(),
@@ -317,7 +318,7 @@ public:
     std::vector<T> recvbuf;
     recvbuf.resize(static_cast<std::size_t>(total));
 
-    COMM_LOG(Communicator, normal, "MPI_Iallgatherv sendcount={} total={} ranks={}\n", sendcount, total, n);
+    COMM_LOG(::comm::util::communicatorComponent(), normal, "MPI_Iallgatherv sendcount={} total={} ranks={}\n", sendcount, total, n);
 
     MPI_Request req;
     MPI_Iallgatherv(
@@ -384,6 +385,8 @@ private:
   bool interop_mode_ = false;
   /// @brief MPI communicator
   MPI_Comm comm_ = MPI_COMM_NULL;
+  /// @brief Whether this instance owns and must free the MPI communicator
+  bool owns_comm_ = false;
   /// @brief Pending operations we are waiting on with buffers
   std::list<std::tuple<MPI_Request, std::unique_ptr<char[]>>> pending_;
   /// @brief Next class index to use for registering class instances
