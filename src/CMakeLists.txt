@@ -34,7 +34,7 @@ target_link_libraries(
   ${COMM_LIBRARY} PUBLIC
     MPI::MPI_CXX
     vt::lib::checkpoint
-    fmt::fmt
+    ${FMT_LINK_TARGET}
 )
 
 if(vt_backend_enabled)
@@ -58,17 +58,19 @@ install(
 
 # Fold the embedded fmt target into comm's export set so `fmt::fmt` resolves
 # transitively (as `comm::fmt`) without a separate fmt package config.
-install(
-  TARGETS               ${FMT_LIBRARY}
-  EXPORT                ${COMM_LIBRARY}
-  LIBRARY DESTINATION   lib
-  ARCHIVE DESTINATION   lib
-  RUNTIME DESTINATION   bin
-  INCLUDES DESTINATION  include
-)
+if(FMT_LIBRARY)
+  install(
+    TARGETS               ${FMT_LIBRARY}
+    EXPORT                ${COMM_LIBRARY}
+    LIBRARY DESTINATION   lib
+    ARCHIVE DESTINATION   lib
+    RUNTIME DESTINATION   bin
+    INCLUDES DESTINATION  include
+  )
+endif()
 
 install(
-  DIRECTORY    ${CMAKE_SOURCE_DIR}/lib/fmt/include/fmt
+  DIRECTORY    ${PROJECT_SOURCE_DIR}/lib/fmt/include/fmt
   DESTINATION  include
   FILES_MATCHING PATTERN "*.h"
 )
@@ -93,8 +95,14 @@ install(
 )
 
 # Export to the build tree as well (usable without installing).
+set(COMM_BUILD_EXPORT_TARGETS ${COMM_LIBRARY})
+
+if(FMT_LIBRARY)
+  list(APPEND COMM_BUILD_EXPORT_TARGETS ${FMT_LIBRARY})
+endif()
+
 export(
-  TARGETS    ${COMM_LIBRARY} ${FMT_LIBRARY}
+  TARGETS    ${COMM_BUILD_EXPORT_TARGETS}
   FILE       "commTargets.cmake"
   NAMESPACE  comm::
 )
