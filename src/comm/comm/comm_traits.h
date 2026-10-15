@@ -47,11 +47,10 @@
 #include <cstddef>
 #include <type_traits>
 #include <utility>
-#include <concepts>
 
 namespace comm {
 
-// New concept helpers capturing common communicator API across CommMPI and CommVT
+// C++17 detection helpers capturing common communicator API across CommMPI and CommVT
 namespace detail {
 
   // Dummy class and member-function pointer used to instantiate templated send<fn>(...)
@@ -60,38 +59,43 @@ namespace detail {
   };
   inline constexpr auto dummyMemFn = &DummyClass::dummyMethod;
 
-  // Concepts for required member functions
+  // Detection idiom: Op<Args...> is well-formed, or nonesuch when it is not
+  struct nonesuch {};
+
+  template <typename, template <typename...> class Op, typename... Args>
+  struct detector {
+    using type = nonesuch;
+  };
+
+  template <template <typename...> class Op, typename... Args>
+  struct detector<std::void_t<Op<Args...>>, Op, Args...> {
+    using type = Op<Args...>;
+  };
+
+  template <template <typename...> class Op, typename... Args>
+  using detected_t = typename detector<void, Op, Args...>::type;
+
+  template <template <typename...> class Op, typename... Args>
+  inline constexpr bool is_detected_v =
+    !std::is_same_v<detected_t<Op, Args...>, nonesuch>;
+
+  // Expressions for required member functions
 
   template <typename Comm>
-  concept HasInit = requires(Comm c, int& argc, char**& argv) {
-    { c.init(argc, argv) };
-  };
+  using init_t =
+    decltype(std::declval<Comm&>().init(std::declval<int&>(), std::declval<char**&>()));
 
   template <typename Comm>
-  concept HasFinalize = requires(Comm c) {
-    { c.finalize() };
-  };
+  using finalize_t = decltype(std::declval<Comm&>().finalize());
 
   template <typename Comm>
-  concept HasNumRanks = requires(Comm const& c) {
-    { c.numRanks() } -> std::integral;
-  };
+  using num_ranks_t = decltype(std::declval<Comm const&>().numRanks());
 
   template <typename Comm>
-  concept HasGetRank = requires(Comm const& c) {
-    { c.getRank() } -> std::integral;
-  };
+  using get_rank_t = decltype(std::declval<Comm const&>().getRank());
 
   template <typename Comm>
-  concept HasPoll = requires(Comm c) {
-    { c.poll() } -> std::convertible_to<bool>;
-  };
-
-  // registerInstanceCollective<T>(T*)
-  template <typename Comm, typename T>
-  concept HasRegisterInstanceCollective = requires(Comm c, T* t) {
-    { c.template registerInstanceCollective<T>(t) };
-  };
+  using poll_t = decltype(std::declval<Comm&>().poll());
 
   // Resolve instance handle type returned by registerInstanceCollective<T>(T*)
   template <typename Comm, typename T>
@@ -100,21 +104,47 @@ namespace detail {
 
   // Unified send pattern: send<fn>(int dest, Handle proxy, ...)
   template <typename Comm>
-  concept HasSendUnified =
+  using send_unified_t = decltype(
+    std::declval<Comm&>().template send<dummyMemFn>(
+      std::declval<int>(),
+      std::declval<instance_handle_t<Comm, DummyClass>>()
+    )
+  );
+
+  // Checks for required member functions
+
+  template <typename Comm>
+  inline constexpr bool HasInit = is_detected_v<init_t, Comm>;
+
+  template <typename Comm>
+  inline constexpr bool HasFinalize = is_detected_v<finalize_t, Comm>;
+
+  template <typename Comm>
+  inline constexpr bool HasNumRanks =
+    std::is_integral_v<detected_t<num_ranks_t, Comm>>;
+
+  template <typename Comm>
+  inline constexpr bool HasGetRank =
+    std::is_integral_v<detected_t<get_rank_t, Comm>>;
+
+  template <typename Comm>
+  inline constexpr bool HasPoll =
+    std::is_convertible_v<detected_t<poll_t, Comm>, bool>;
+
+  template <typename Comm, typename T>
+  inline constexpr bool HasRegisterInstanceCollective =
+    is_detected_v<instance_handle_t, Comm, T>;
+
+  template <typename Comm>
+  inline constexpr bool HasSendUnified =
     HasRegisterInstanceCollective<Comm, DummyClass> &&
-    requires(Comm c) {
-      { c.template send<dummyMemFn>(
-          std::declval<int>(),
-          std::declval<instance_handle_t<Comm, DummyClass>>()
-        )
-      };
-    };
+    is_detected_v<send_unified_t, Comm>;
 
 } // namespace detail
 
-// Primary concept that a communicator must satisfy
+// Primary check that a communicator must satisfy
 template <typename Comm>
-concept Communicator =
+inline constexpr bool is_communicator_v =
   detail::HasInit<Comm> &&
   detail::HasFinalize<Comm> &&
   detail::HasNumRanks<Comm> &&
@@ -123,7 +153,13 @@ concept Communicator =
   detail::HasRegisterInstanceCollective<Comm, detail::DummyClass> &&
   detail::HasSendUnified<Comm>;
 
-// Backward-compatible traits shim implemented in terms of concepts
+#if defined(__cpp_concepts) && __cpp_concepts >= 201907L
+// Concept form for C++20 consumers
+template <typename Comm>
+concept Communicator = is_communicator_v<Comm>;
+#endif
+
+// Backward-compatible traits shim
 template <typename Comm>
 struct CommunicatorTraits {
   static constexpr bool has_init = detail::HasInit<Comm>;
@@ -142,12 +178,12 @@ struct CommunicatorTraits {
   static constexpr bool has_send_unified =
     detail::HasSendUnified<Comm>;
 
-  static constexpr bool is_valid = Communicator<Comm>;
+  static constexpr bool is_valid = is_communicator_v<Comm>;
 };
 
 // Convenience alias to check conformance at compile time
 template <typename Comm>
-using is_comm_conformant = std::bool_constant<Communicator<Comm>>;
+using is_comm_conformant = std::bool_constant<is_communicator_v<Comm>>;
 
 } /* end namespace comm */
 
