@@ -46,7 +46,9 @@
 
 #include <mpi.h>
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <sstream>
+#include <string>
 
 namespace comm { namespace tests { namespace unit {
 
