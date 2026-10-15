@@ -64,8 +64,13 @@ namespace comm { namespace tests { namespace unit {
 extern int test_argc;
 extern char** test_argv;
 
-template <typename TestBase, comm::Communicator CommType>
+template <typename TestBase, typename CommType>
 struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
+  static_assert(
+    comm::is_communicator_v<CommType>,
+    "CommType must satisfy the comm communicator interface"
+  );
+
   virtual void SetUp() override {
     TestHarnessAny<TestBase>::SetUp();
 
@@ -167,16 +172,16 @@ private:
   std::vector<char*> additional_args_;
 };
 
-template <comm::Communicator CommType>
+template <typename CommType>
 using TestParallelHarness = TestParallelHarnessAny<testing::Test, CommType>;
 
-template <typename ParamT, comm::Communicator CommType>
+template <typename ParamT, typename CommType>
 using TestParallelHarnessParam = TestParallelHarnessAny<
   testing::TestWithParam<ParamT>, CommType
 >;
 
 struct CommNameGenerator {
-  template <comm::Communicator CommType>
+  template <typename CommType>
   static std::string GetName(int) {
     if constexpr (std::is_same_v<CommType, comm::CommMPI>) return "CommMPI";
   #if vt_backend_enabled
