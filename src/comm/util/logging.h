@@ -74,7 +74,13 @@ public:
 
   explicit operator bool() const noexcept { return state_ != nullptr; }
 
-  friend bool operator==(Component const&, Component const&) = default;
+  friend bool operator==(Component const& a, Component const& b) noexcept {
+    return a.state_ == b.state_;
+  }
+
+  friend bool operator!=(Component const& a, Component const& b) noexcept {
+    return !(a == b);
+  }
 
 private:
   explicit Component(std::shared_ptr<detail::ComponentState> state)

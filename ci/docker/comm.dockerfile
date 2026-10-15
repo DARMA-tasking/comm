@@ -10,6 +10,7 @@ ARG IMAGE
 ARG CACHE_ID=${IMAGE}
 ARG GIT_BRANCH
 ARG COMM_DOXYGEN_ENABLED=0
+ARG CMAKE_CXX_STANDARD=17
 
 RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache             \
     --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/comm         \
