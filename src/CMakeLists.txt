@@ -23,6 +23,8 @@ add_library(
   ${HEADER_FILES} ${SOURCE_FILES}
 )
 
+target_compile_features(${COMM_LIBRARY} PUBLIC cxx_std_17)
+
 target_include_directories(
   ${COMM_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
