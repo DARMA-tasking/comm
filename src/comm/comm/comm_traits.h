@@ -202,7 +202,7 @@ namespace detail {
     HasRegisterInstanceCollective<Comm, DummyClass> &&
     is_detected_v<send_unified_t, Comm>;
 
-#endif
+#endif // COMM_HAS_CONCEPTS
 
 } // namespace detail
 
