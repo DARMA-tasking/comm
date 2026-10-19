@@ -16,7 +16,7 @@ function "comm_docs" {
 
 function "cxx_standard" {
   params = [item]
-  result = lookup(item, "cxx_standard", "17")
+  result = lookup(item, "cxx_standard", "20")
 }
 
 function "variant" {
@@ -86,8 +86,8 @@ target "comm-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-gcc-12-cpp"
-        cxx_standard = 20
-        variant = "cxx20"
+        cxx_standard = 17
+        variant = "cxx17"
       },
       {
         image = "amd64-ubuntu-22.04-gcc-12-vtk-cpp"

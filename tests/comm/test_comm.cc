@@ -54,7 +54,7 @@
 
 namespace comm { namespace tests { namespace unit {
 
-template <typename CommType>
+template <COMM_COMMUNICATOR CommType>
 struct TestCommBasic : TestParallelHarness<CommType> {
   struct TestObject {
     int calls = 0;

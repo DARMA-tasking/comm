@@ -74,6 +74,9 @@ public:
 
   explicit operator bool() const noexcept { return state_ != nullptr; }
 
+#if defined(__cpp_impl_three_way_comparison) && __cpp_impl_three_way_comparison >= 201907L
+  friend bool operator==(Component const&, Component const&) = default;
+#else
   friend bool operator==(Component const& a, Component const& b) noexcept {
     return a.state_ == b.state_;
   }
@@ -81,6 +84,7 @@ public:
   friend bool operator!=(Component const& a, Component const& b) noexcept {
     return !(a == b);
   }
+#endif
 
 private:
   explicit Component(std::shared_ptr<detail::ComponentState> state)

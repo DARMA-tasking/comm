@@ -58,7 +58,7 @@ TEST_F(TestDummyVTOnly, test_dummy) {
 }
 #endif
 
-template <typename CommType>
+template <COMM_COMMUNICATOR CommType>
 struct TestDummyAnyComm : TestParallelHarness<CommType> {
 };
 
