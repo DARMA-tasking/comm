@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.generate-matrix.outputs.matrix }}
+      macos-matrix: ${{ steps.macos-matrix.outputs.matrix }}
 
     steps:
       - name: Checkout
@@ -26,6 +27,73 @@ jobs:
         with:
           target: comm-build-all
           files: docker-bake.hcl
+
+      - name: Checkout shared runner configurations
+        uses: actions/checkout@v6
+        with:
+          repository: DARMA-tasking/workflows
+          ref: master
+          path: .ci-workflows
+          persist-credentials: false
+
+      - name: Select native macOS MPI configuration
+        id: macos-matrix
+        shell: bash
+        run: |
+          matrix=$(jq -ce '
+            [.matrix[] | select(.setup == "arm64-macos-15-clang-14-cpp")]
+            | if length == 1 then . else error("Expected one macOS MPI runner") end
+          ' .ci-workflows/ci/shared/matrix/github.json)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  macos:
+    name: macOS build and tests (${{ matrix.runs-on }}, MPICH)
+    runs-on: ${{ matrix.runs-on }}
+    needs:
+      - prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.macos-matrix) }}
+    env:
+      CMAKE_BUILD_TYPE: Debug
+      CMAKE_BUILD_PARALLEL_LEVEL: '3'
+      VT_BACKEND_ENABLED: 'OFF'
+      COMM_DOXYGEN_ENABLED: '0'
+      # Use the runner's Apple Clang through MPICH's compiler wrappers.
+      MPICH_CC: clang
+      MPICH_CXX: clang++
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install native build dependencies
+        shell: bash
+        run: |
+          # Matches the shared setup's packages; CMake >= 3.23 is also required.
+          brew install ccache coreutils ninja mpich cmake
+          mpi_prefix=$(brew --prefix mpich)
+          echo "$mpi_prefix/bin" >> "$GITHUB_PATH"
+          echo "CC=$mpi_prefix/bin/mpicc" >> "$GITHUB_ENV"
+          echo "CXX=$mpi_prefix/bin/mpicxx" >> "$GITHUB_ENV"
+          echo "CMAKE_PREFIX_PATH=$mpi_prefix" >> "$GITHUB_ENV"
+
+      - name: Report toolchain
+        shell: bash
+        run: |
+          uname -m
+          clang++ --version
+          "$CXX" -show
+          cmake --version
+
+      - name: Build
+        shell: bash
+        run: bash ci/build_cpp.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/comm-ci"
+
+      - name: Test
+        shell: bash
+        run: bash ci/test_cpp.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/comm-ci"
 
   bake:
     runs-on: ubuntu-latest
