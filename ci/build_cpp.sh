@@ -56,6 +56,7 @@ cmake_command=(
     -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-OFF}"
     -Dvt_backend_enabled="${VT_BACKEND_ENABLED:-OFF}"
     -DCOMM_DOXYGEN_ENABLED="${COMM_DOXYGEN_ENABLED:-0}"
+    -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-20}"
 )
 
 if command -v ccache >/dev/null 2>&1; then
